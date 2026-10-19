@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ESD Measurement</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>ESD Oscilloscope Measurement</h1>
+      <p>FastAPI → Controller → Service → ScopeClient → Datenbank</p>
+
+      <section class="card">
+        <label>
+          Operator
+          <input id="operator" value="" />
+        </label>
+        <label
+          >projekt_name
+          <input id="projekt_name" value="ESD_Test" />
+        </label>
+        <label
+          >test_art
+          <input id="test_art" value="ESD" />
+        </label>
+        <label
+          >Testpunkt
+          <input id="testPoint" value="KL30" />
+        </label>
+        <label
+          >ESD Spannung [kV]
+          <input id="voltage" type="number" step="0.1" value="1" />
+        </label>
+        <label
+          >Polarität
+          <select id="polarity">
+            <option value="positive">Positive</option>
+            <option value="negative">Negative</option>
+          </select>
+        </label>
+
+        <button id="startButton">Messung starten</button>
+        <p id="status"></p>
+      </section>
+
+      <section class="card">
+        <h2>Letztes Ergebnis</h2>
+        <div id="result">Noch keine Messung.</div>
+        <img id="scopeScreenshot" alt="Scope Screenshot" />
+      </section>
+
+      <section class="card">
+        <h2>Messhistorie</h2>
+        <button id="reloadButton">Historie aktualisieren</button>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Datum</th>
+              <th>projekt_name</th>
+              <th>Operator</th>
+              <th>test_art</th>
+              <th>Testpunkt</th>
+              <th>Level</th>
+              <th>Polarität</th>
+              <th>Messwert</th>
+              <th>Bild</th>
+              <th>Status</th>
+
+              <!-- <th>Delete</th> -->
+            </tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+      </section>
+    </main>
+    <script>
+      async function startMeasurement() {
+        const button = document.getElementById('startButton');
+        const status = document.getElementById('status');
+        button.disabled = true;
+        status.textContent = 'Messung läuft ...';
+
+        const body = {
+          voltage_kv: Number(document.getElementById('voltage').value),
+          projekt_name: document.getElementById('projekt_name').value,
+          polarity: document.getElementById('polarity').value,
+          test_art: document.getElementById('test_art').value,
+          test_point: document.getElementById('testPoint').value,
+          operator: document.getElementById('operator').value,
+        };
+
+        try {
+          const response = await fetch('/esd/measurement', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (!response.ok) throw new Error(await response.text());
+          const data = await response.json();
+
+          status.textContent = 'Messung abgeschlossen.';
+          document.getElementById('result').textContent =
+            `ID ${data.id}  ${data.scope_name} | ${data.measured_voltage} V | ${data.status}`;
+          document.getElementById('scopeScreenshot').src =
+            data.screenshot_url + '?t=' + Date.now();
+          await loadHistory();
+        } catch (error) {
+          status.textContent = 'Fehler: ' + error.message;
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      async function loadHistory() {
+        const response = await fetch('/measurements');
+        const data = await response.json();
+        const tbody = document.getElementById('history');
+        tbody.innerHTML = data
+          .map(
+            (m) => `
+    <tr>
+      <td>${m.id}</td>
+      <td>${new Date(m.created_at).toLocaleString()}</td>
+      <td>${m.projekt_name}</td>
+              <td>${m.operator}</td>
+              <td>${m.test_art}</td>
+              <td>${m.test_point}</td>
+              <td>${m.esd_voltage_kv} kV</td>
+              <td>${m.polarity}</td>
+              <td>${m.measured_voltage} V</td>
+      <td><a class="screenshot-link" href="${m.screenshot_url}?t=${Date.now()}-${m.id}" target="_blank" rel="noopener noreferrer">anzeigen</a></td>
+      <td>${m.status}</td>
+   <!-- <td><button onclick="deleteMeasurement(${m.id})">Delete</button></td> -->
+    </tr>`,
+          )
+          .join('');
+      }
+
+      document
+        .getElementById('startButton')
+        .addEventListener('click', startMeasurement);
+      document
+        .getElementById('reloadButton')
+        .addEventListener('click', loadHistory);
+      loadHistory();
+
+      // async function deleteMeasurement(id) {
+      //   if (
+      //     !confirm('Sind Sie sicher, dass Sie diese Messung löschen möchten?')
+      //   )
+      //     return;
+      //   const response = await fetch(`/measurements/${id}`, {
+      //     method: 'DELETE',
+      //   });
+      //   if (response.ok) {
+      //     await loadHistory();
+      //   } else {
+      //     alert('Fehler: ' + (await response.text()));
+      //   }
+      // }
+    </script>
+  </body>
+</html>

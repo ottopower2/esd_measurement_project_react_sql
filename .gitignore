@@ -1,0 +1,28 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+
+# Node dependencies and generated frontend
+node_modules/
+frontend/dist/
+
+# Local configuration and measurement data
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+data/
+
+# Local browser profiles and editor files
+.edge*/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

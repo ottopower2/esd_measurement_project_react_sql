@@ -1,0 +1,17 @@
+body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f8; color: #1f2937; }
+main { max-width: 1050px; margin: 40px auto; padding: 0 20px; }
+.card { background: white; padding: 22px; margin: 18px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+label { display: block; margin: 12px 0; }
+input, select, button { padding: 9px; margin-top: 5px; }
+button { cursor: pointer; }
+#scopeScreenshot { max-width: 100%; margin-top: 15px; border: 1px solid #ddd; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+th, td { padding: 9px; border-bottom: 1px solid #ddd; text-align: left; }
+.screenshot-link,
+.screenshot-link:visited {
+  color: #2563eb;
+}
+
+.screenshot-link:hover {
+  color: #1d4ed8;
+}
